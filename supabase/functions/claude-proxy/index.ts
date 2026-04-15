@@ -9,7 +9,6 @@ const corsHeaders = {
 }
 
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -23,23 +22,14 @@ serve(async (req: Request) => {
       )
     }
 
-    const { messages, system } = await req.json()
+    // Le frontend envoie model, max_tokens, system et messages — on les transmet tels quels
+    const payload = await req.json()
 
-    if (!messages || !Array.isArray(messages)) {
+    if (!payload.messages || !Array.isArray(payload.messages)) {
       return new Response(
         JSON.stringify({ error: 'Paramètre messages manquant ou invalide' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
-    }
-
-    const body: Record<string, unknown> = {
-      model: 'claude-opus-4-6',
-      max_tokens: 4096,
-      messages,
-    }
-
-    if (system) {
-      body.system = system
     }
 
     const response = await fetch(ANTHROPIC_API_URL, {
@@ -49,7 +39,7 @@ serve(async (req: Request) => {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
     })
 
     const data = await response.json()
