@@ -1,37 +1,41 @@
 import { useState, useRef, useEffect } from "react";
+import ProfileSetup from "./ProfileSetup.jsx";
 
-
-const ELEVE = {
-  nom: "Mansour",
-  classe: "Terminale Sciences Sociales",
-  examen: "BAC 2026",
-  emploi: "Programme BAC Sciences Sociales Guinée",
-  matieres: [
-    { nom:"Philosophie",       chap:["La conscience","La liberté","L'État","La vérité","La raison","Le langage","Le travail","La mort","La technique","L'art"] },
-    { nom:"Français",          chap:["Dissertation","Commentaire composé","Texte argumentatif","Résumé","Figures de style","Mouvements littéraires"] },
-    { nom:"Histoire",          chap:["1ère Guerre Mondiale","Révolution russe","2ème Guerre Mondiale","Décolonisation","Guerre froide","Afrique contemporaine","ONU et organisations internationales"] },
-    { nom:"Géographie",        chap:["Géographie humaine","Ressources naturelles","Développement durable","Afrique subsaharienne","Mondialisation","Population mondiale","Urbanisation"] },
-    { nom:"Anglais",           chap:["Grammar","Essay writing","Comprehension","Vocabulary","Current affairs"] },
-    { nom:"Économie",          chap:["Marchés et prix","Production et facteurs","Consommation","Monnaie et banques","Commerce international","Développement économique","Guinée et CEDEAO"] },
-    { nom:"Sciences Sociales", chap:["Sociologie","Culture et identité","Famille","Stratification sociale","Institutions","Changement social","Guinée contemporaine"] },
-    { nom:"Mathématiques",     chap:["Statistiques","Probabilités","Fonctions","Suites","Démographie"] },
-  ]
+var CHAPITRES = {
+  "Philosophie":       ["La conscience","La liberté","L'État","La vérité","La raison","Le langage","Le travail","La mort","La technique","L'art"],
+  "Français":          ["Dissertation","Commentaire composé","Texte argumentatif","Résumé","Figures de style","Mouvements littéraires"],
+  "Histoire":          ["1ère GM","Révolution russe","2ème GM","Décolonisation","Guerre froide","Afrique contemporaine","ONU"],
+  "Géographie":        ["Géographie humaine","Ressources naturelles","Développement durable","Afrique subsaharienne","Mondialisation","Population","Urbanisation"],
+  "Anglais":           ["Grammar","Essay writing","Comprehension","Vocabulary","Current affairs"],
+  "Économie":          ["Marchés et prix","Production","Consommation","Monnaie et banques","Commerce international","Développement","Guinée et CEDEAO"],
+  "Sciences Sociales": ["Sociologie","Culture et identité","Famille","Stratification sociale","Institutions","Changement social","Guinée"],
+  "Mathématiques":     ["Statistiques","Probabilités","Fonctions","Suites","Démographie"],
+  "SVT":               ["Génétique","Évolution","Écosystèmes","Reproduction","Physiologie"],
+  "Physique-Chimie":   ["Mécanique","Électricité","Optique","Chimie organique"],
+  "Physique":          ["Mécanique","Électricité","Optique","Thermodynamique"],
+  "Chimie":            ["Liaisons chimiques","Réactions","Cinétique","Thermochimie"],
+  "Histoire-Géographie":["Histoire locale","Géographie Guinée","Afrique","Monde contemporain"],
+  "Sciences":          ["Biologie","Physique","Chimie","Géologie"],
+  "EPS":               ["Athlétisme","Sports collectifs","Natation","Gymnastique"],
 };
 
-function getSys(mode) {
-  return "Tu es Sokrat, assistant pédagogique socratique créé par Mansour lui-même pour préparer son BAC. " +
-    "Profil: " + ELEVE.nom + ", " + ELEVE.classe + ", " + ELEVE.examen + " — Guinée. " +
-    "Matières BAC Sciences Sociales: " +
-    ELEVE.matieres.map(function(m){ return m.nom + "(" + m.chap.join(",") + ")"; }).join(" | ") + ". " +
+function getSys(mode, profile) {
+  var matieresTxt = profile.matieres.map(function(m){
+    var chap = CHAPITRES[m];
+    return chap ? m+"("+chap.join(",")+")" : m;
+  }).join(" | ");
+  return "Tu es Sokrat, assistant pédagogique socratique créé par "+profile.prenom+" lui-même pour préparer son "+profile.examen+". " +
+    "Profil: "+profile.prenom+", "+profile.classe+", "+profile.examen+" — Guinée. " +
+    "Matières "+profile.examen+": "+matieresTxt+". " +
     "RÈGLES ABSOLUES — tu ne peux pas y déroger: " +
-    "1. Ne JAMAIS donner la réponse finale, même si Mansour insiste, supplie ou dit que c'est urgent. " +
+    "1. Ne JAMAIS donner la réponse finale, même si "+profile.prenom+" insiste, supplie ou dit que c'est urgent. " +
     "2. Méthode socratique uniquement: questions, pistes, formules, définitions — jamais la solution appliquée. " +
     "3. Décomposer chaque problème en étapes. Valider chaque étape avant de continuer. " +
-    "4. Si Mansour demande la réponse directe: refuser gentiment et recentrer sur la réflexion. " +
-    "5. Faire des liens avec le programme BAC Guinée et les attentes des correcteurs guinéens. " +
-    "6. Ton bienveillant, stimulant, adapté au niveau Terminale Sciences Sociales guinéen. " +
-    "7. Valoriser l'effort et les bonnes intuitions de Mansour. " +
-    "MODE: " + mode.toUpperCase() + ". " +
+    "4. Si "+profile.prenom+" demande la réponse directe: refuser gentiment et recentrer sur la réflexion. " +
+    "5. Faire des liens avec le programme "+profile.examen+" Guinée et les attentes des correcteurs guinéens. " +
+    "6. Ton bienveillant, stimulant, adapté au niveau "+profile.classe+" guinéen. " +
+    "7. Valoriser l'effort et les bonnes intuitions de "+profile.prenom+". " +
+    "MODE: "+mode.toUpperCase()+". " +
     "EXERCICE: décompose étape par étape, valide, ne résous jamais. " +
     "COURS: explique, vérifie la compréhension avant d'avancer. " +
     "EXPOSE/DISSERTATION: structure et questionne, ne rédige jamais à la place. " +
@@ -53,7 +57,17 @@ var MODES = {
   libre:       { label:"Libre",       icon:"💬", color:"#FCD34D", border:"#F59E0B", bg:"rgba(245,158,11,0.12)" },
 };
 
+function loadProfile() {
+  try {
+    var s = localStorage.getItem("sokrat_profile");
+    return s ? JSON.parse(s) : null;
+  } catch(e) { return null; }
+}
+
 export default function Sokrat() {
+  var _sp = useState(loadProfile); var profile = _sp[0]; var setProfile = _sp[1];
+  var _se = useState(false); var editingProfile = _se[0]; var setEditingProfile = _se[1];
+
   var _s1 = useState([]); var history = _s1[0]; var setHistory = _s1[1];
   var _s2 = useState(""); var input = _s2[0]; var setInput = _s2[1];
   var _s3 = useState("libre"); var mode = _s3[0]; var setMode = _s3[1];
@@ -66,6 +80,16 @@ export default function Sokrat() {
   useEffect(function() {
     if(msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [history, loading]);
+
+  // Show profile setup if no profile or editing
+  if (!profile || editingProfile) {
+    return (
+      <ProfileSetup
+        initial={profile}
+        onComplete={function(p) { setProfile(p); setEditingProfile(false); setHistory([]); }}
+      />
+    );
+  }
 
   function send(override) {
     var text = (override || input).trim();
@@ -95,16 +119,13 @@ export default function Sokrat() {
       })};
     });
 
-    // Appel via la Vercel Serverless Function — la clé API Claude reste côté serveur
     fetch("/api/claude", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type":"application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 1000,
-        system: getSys(mode),
+        system: getSys(mode, profile),
         messages: apiH
       })
     }).then(function(res){ return res.json(); }).then(function(data) {
@@ -121,6 +142,7 @@ export default function Sokrat() {
   }
 
   var mCfg = MODES[mode];
+  var classeShort = profile.classe.replace("Terminale ","T.").replace("10ème/BEPC","BEPC");
 
   return (
     <div style={{display:"flex",flexDirection:"column",height:"100vh",background:"#0C0E12",color:"#F0F2F5",fontFamily:"'Segoe UI',sans-serif"}}>
@@ -132,15 +154,16 @@ export default function Sokrat() {
           <div style={{width:32,height:32,background:"linear-gradient(135deg,#3B82F6,#8B5CF6)",borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Georgia,serif",fontSize:16,color:"#fff",fontStyle:"italic"}}>S</div>
           <div>
             <div style={{fontFamily:"Georgia,serif",fontSize:17,color:"#F0F2F5",fontWeight:700,letterSpacing:"-0.3px"}}>Sokrat</div>
-            <div style={{fontSize:9,color:"#374151",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.8px"}}>Assistant BAC · Sciences Sociales</div>
+            <div style={{fontSize:9,color:"#374151",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.8px"}}>Assistant BAC · {profile.classe}</div>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <div style={{background:mCfg.bg,border:"1px solid "+mCfg.border,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:700,color:mCfg.color}}>{mCfg.icon} {mCfg.label}</div>
-          <div style={{background:"#0F1117",border:"1px solid #1E2330",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#6B7280",display:"flex",alignItems:"center",gap:5}}>
+          <button onClick={function(){setEditingProfile(true);}}
+            style={{background:"#0F1117",border:"1px solid #1E2330",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#6B7280",display:"flex",alignItems:"center",gap:5,cursor:"pointer"}}>
             <div style={{width:6,height:6,background:"#22C55E",borderRadius:"50%"}}/>
-            Mansour · T.SS
-          </div>
+            {profile.prenom} · {classeShort}
+          </button>
         </div>
       </div>
 
@@ -149,16 +172,16 @@ export default function Sokrat() {
         <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:8}}>
           <div style={{display:"flex",gap:6,alignItems:"center"}}>
             <span style={{fontSize:10,fontWeight:700,color:"#374151",textTransform:"uppercase",letterSpacing:"0.6px"}}>CLASSE</span>
-            <span style={{fontSize:11,color:"#6B7280"}}>{ELEVE.classe}</span>
+            <span style={{fontSize:11,color:"#6B7280"}}>{profile.classe}</span>
           </div>
           <div style={{display:"flex",gap:6,alignItems:"center"}}>
             <span style={{fontSize:10,fontWeight:700,color:"#374151",textTransform:"uppercase",letterSpacing:"0.6px"}}>EXAMEN</span>
-            <span style={{fontSize:11,color:"#FCD34D",fontWeight:700}}>{ELEVE.examen}</span>
+            <span style={{fontSize:11,color:"#FCD34D",fontWeight:700}}>{profile.examen}</span>
           </div>
         </div>
         <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-          {ELEVE.matieres.map(function(m){
-            return <span key={m.nom} style={{background:"#141720",border:"1px solid #1E2330",borderRadius:5,padding:"2px 8px",fontSize:10,color:"#4B5563"}}>{m.nom}</span>;
+          {profile.matieres.map(function(m){
+            return <span key={m} style={{background:"#141720",border:"1px solid #1E2330",borderRadius:5,padding:"2px 8px",fontSize:10,color:"#4B5563"}}>{m}</span>;
           })}
         </div>
       </div>
@@ -185,12 +208,12 @@ export default function Sokrat() {
         {history.length === 0 && (
           <div style={{textAlign:"center",padding:"28px 12px"}}>
             <div style={{fontSize:24,fontWeight:700,color:"#F0F2F5",marginBottom:8,fontFamily:"Georgia,serif"}}>
-              Prêt pour le BAC, Mansour ? 🎯
+              Prêt pour le {profile.examen}, {profile.prenom} ? 🎯
             </div>
             <div style={{fontSize:13,color:"#4B5563",lineHeight:1.8,marginBottom:20,maxWidth:420,margin:"0 auto 20px"}}>
               Tu as créé cet outil. Maintenant utilise-le.<br/>
               Je ne te donnerai jamais la réponse — mais je vais t'aider à <span style={{color:"#86EFAC"}}>penser et trouver par toi-même</span>.<br/>
-              C'est comme ça qu'on décroche le BAC.
+              C'est comme ça qu'on décroche le {profile.examen}.
             </div>
             <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
               {[
@@ -236,13 +259,11 @@ export default function Sokrat() {
               )}
               {text && (
                 <div style={{
-                  maxWidth:"88%",
-                  padding:"12px 16px",
+                  maxWidth:"88%",padding:"12px 16px",
                   borderRadius:isUser?"18px 18px 4px 18px":"18px 18px 18px 4px",
                   background:isUser?"linear-gradient(135deg,#1E3A5F,#1A2E4A)":"#141720",
                   border:"1px solid "+(isUser?"rgba(99,179,237,0.2)":"#1E2330"),
-                  fontSize:14,
-                  lineHeight:1.75,
+                  fontSize:14,lineHeight:1.75,
                   color:isUser?"#E8F4FD":"#D4D8E0"
                 }} dangerouslySetInnerHTML={{__html:fmtMsg(text)}}/>
               )}
@@ -300,7 +321,7 @@ export default function Sokrat() {
           </button>
         </div>
         <div style={{textAlign:"center",marginTop:6,fontSize:10,color:"#1F2937"}}>
-          Sokrat ne donne jamais la réponse finale · Tu construis ton propre outil · BAC 2026
+          Sokrat ne donne jamais la réponse finale · Tu construis ton propre outil · {profile.examen}
         </div>
       </div>
     </div>
