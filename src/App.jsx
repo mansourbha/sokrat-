@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 
-var SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-var SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const ELEVE = {
   nom: "Mansour",
@@ -97,12 +95,11 @@ export default function Sokrat() {
       })};
     });
 
-    // Appel via la Edge Function Supabase — la clé API Claude reste côté serveur
-    fetch(SUPABASE_URL + "/functions/v1/claude-proxy", {
+    // Appel via la Vercel Serverless Function — la clé API Claude reste côté serveur
+    fetch("/api/claude", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + SUPABASE_ANON_KEY
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
